@@ -1,0 +1,19 @@
+
+	N
+     W  +  E
+	S
+
+Gates:
+
+North:1000
+!(x==0&&y==3)
+East:0100
+!(x==3&&y==6)
+West:0010
+!(x==3&&y==0)
+South:0001
+!(x==6&&y==3)
+
+Rooms
+
+North:  
