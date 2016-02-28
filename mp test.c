@@ -90,15 +90,10 @@ void playerData()
 }
 int main()
 {
-	int start=7,i,j,Px,Py,tempX,tempY,roomAlgo[3][3],Rx=1,Ry=1;
+	int start=7,i,j,Px,Py,tempX,tempY,roomAlgo[3][3]={{0,0001},{100,1111,10},{1000}},Rx=1,Ry=1;
 	char move,box[start][start];
 	Px=start/2;
 	Py=start/2;
-	roomAlgo[0][1]=0001;
-	roomAlgo[1][0]=100;
-	roomAlgo[1][1]=1111;
-	roomAlgo[1][2]=10;
-	roomAlgo[2][1]=1000;
 	do{
 		generateRoom(box,roomAlgo,start,Rx,Ry);
 		box[Px][Py]=player;
