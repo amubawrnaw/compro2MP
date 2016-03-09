@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <conio.h>
+#include <time.h>
 #define playerSymbol 'P'
 #define Rooms 100
 
@@ -122,9 +123,22 @@ void playerStats(char dataName[][30],struct player pData)
 	printf(" Current Armor: %s",pData.pArmor.armorName);
 	getch();
 }
-void weaponStats()
+/****************************************************************************************************************************/
+void weaponStats(struct weaponTag *currentWeap)
 {
+    char weaponName[10][101]={"Sword","Shield","Water Bottle","Pencil","Balloon","All nighter","Booster C","Chair","Stick","Spoon"};
+    
 }
+void armorStats(struct armorTag *currentArmor)
+{
+     	
+    char armorName[10][101]={"T-Shirt","Polo-Shirt","Polo","Shorts","Yes","Jacket","Sweater","Steel Armor","Dress","Suit"};
+}
+void enemData(struct enemyTag *currentEnem)
+{
+	char monsterName[10][41]={"COMPRO2","DISCTRU","GOBLIN","ORC","DLSU","SOCTEC1","CCSTRIG","DEADLINE","MP","SLEEP" };
+}
+/****************************************************************************************************************************/
 void dealDamage()
 {
 	
@@ -215,10 +229,6 @@ void calcStats(struct player *pData)
 	pData->pHP=pData->pLvl+pData->pHP+pData->pArmor.armorHp+pData->pWeapon.weapHP;
 	pData->pCon=(pData->pHP*.20)+pData->pCon;
 }
-void enemData(struct enemyTag *currentEnem)
-{
-	
-}
 int getRoundedVal(float x)
 {
 	int y=x;
@@ -244,6 +254,12 @@ void defaultGear(struct player *pData)
 	pData->pWeapon.weapVal=2;
 	/************************/
 }
+int returnRand(int yes)
+{
+    int randNum;
+    randNum=srand(time(NULL));
+    return randNum=rand()%yes;
+}
 int main()
 {
 	int start=7//room size
@@ -257,20 +273,19 @@ int main()
 		,Rx=1//x location of the center room
 		,Ry=1//y location of the center room
 		,data[7]={7,0,1,0,0,0,0}//starting skill distribution
-		,prevLvl=0;
+		,prevLvl=0//Placeholder from player's previous level
+        ,randNum;//contains the random number
 	
 	char move//user input for player interaction
 		,box[start][start]//room array
 		,playerName[101]//player's name
 		,dataName[8][30]={"","SP   ","exp  ","Level","dmg  ","def  ","hp   ","con  "}//starting skill names
-		,temp[51]//temporary player name holder
-		,monsterName[10][41]={"COMPRO2","DISCTRU","GOBLIN","ORC","DLSU","SOCTEC1","CCSTRIG","DEADLINE","MP","SLEEP" }
-		,armorName[10][101]={"T-Shirt","Polo-Shirt","Polo","Shorts","Yes","Jacket","Sweater","Steel Armor","Dress","Suit"}
-		,weaponName[10][101]={"Sword","Shield","Water Bottle","Pencil","Balloon","All nighter","Booster C","Chair","Stick","Spoon"};
-		
-
+		,temp[51];//temporary player name holder
+	
 	struct player pData;
 	struct enemyTag currentEnem;
+	struct weaponTag currentWeap;
+	struct armorTag currentArmor;
 	printf("What is your name?: ");
 	scanf("%[^\n]s",playerName);
 	
