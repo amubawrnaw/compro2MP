@@ -555,7 +555,7 @@ int main()
 					else if (checkForNextRoom(box,tempX-1,Py))
 					{
 						Rx--;
-						Px=6;
+						Px=roomSize-1;
 					}
 					else if (checkForWall(box,tempX-1,Py))
 					{
@@ -647,7 +647,7 @@ int main()
 					else if (checkForNextRoom(box,Px,tempY-1))
 					{
 						Ry--;
-						Py=6;
+						Py=roomSize-1;
 					}
 					else if (checkForWall(box,Px,tempY-1))
 					{
