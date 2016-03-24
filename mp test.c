@@ -3,8 +3,11 @@
 #include <string.h>
 #include <conio.h>
 #include <time.h>
+
 #define playerSymbol 'P'
-#define roomSize 11
+#define roomSize 7
+#define roomLimit 100
+
 struct treasureTag{
 	int treasVal;
 };
@@ -38,11 +41,35 @@ struct enemyTag{
 	int enemDmg;
 	int enemHP;
 };
+
 typedef struct enemyTag enemy;
 typedef struct armorTag armor;
 typedef struct weaponTag weapon;
 typedef struct playerTag player;
 typedef struct treasureTag treasure;
+typedef struct roomTag room;
+
+struct  roomTag{
+	int roomCode;//code used to generate rooms
+	int mLocX //Monster X coordinate
+		,mLocY //Monster Y coordinate
+		,aLocX //Armor X coordinate
+		,aLocY //Armor Y coordinate
+		,wLocX //Weapon X coordinate
+		,wLocY //Weapon Y coordinate
+		,tLocX //Treasure X coordinate
+		,tLocY //Treasure Y coordinate
+		,sLocX //Surface Link X coordinate
+		,sLocY; //Surface Link Y coordinate
+	room *northRoom;//Node to north room
+	room *eastRoom;//Node to east room
+	room *westRoom;//Node to west room
+	room *southRoom;//Node to south room
+	weapon roomWeapon;//struct containing the room's weapon stats
+	armor roomArmor;//struct containing the room's armor stats
+	treasure roomTreasure;//struct containing the room's treasure stats
+	enemy roomEnem;//struct containing the room's enemy stats
+};
 /****************************************************************************************************************************/
 int getRoundedVal(float x)
 {
@@ -73,13 +100,13 @@ void printData(char dataName[][30],int data[],char ptr[],char ptr2[],int x)
 {
 	int i;
 	system("cls");
-	printf(" %s\n",dataName[0]);
+	printf("\n\t\t %s\n\n",dataName[0]);
 	for (i=1;i<3;i++)
-		printf(" %s: %d\n",dataName[i],data[i-1]);
-	printf(" --------\n");
+		printf("\t\t %s: %d\n\n",dataName[i],data[i-1]);
+	printf("\t\t --------\n");
 	for (i=3;i<8;i++)
-		printf("%c%s: %d%c\n",ptr[i-3],dataName[i],data[i-1],ptr2[i-3  ]);
-	printf("\n\n W-S  to select, ENTER to upgrade");
+		printf("\t\t%c%s: %d%c\n\n",ptr[i-3],dataName[i],data[i-1],ptr2[i-3  ]);
+	printf("\n\n\t\t W-S  to select\t\n\t\t ENTER to upgrade");
 }
 void playerData(char dataName[][30],int data[])
 { 
@@ -114,7 +141,7 @@ void playerData(char dataName[][30],int data[])
 	ptr[x]=' ';
 	ptr2[x]=' ';
 	printData(dataName,data,ptr,ptr2,x);
-	printf("\n Press any key to start...");
+	printf("\n\n \t\tPress any key to start...");
 	getch();
 }
 void transSkills(int data[],player *pData)
@@ -156,48 +183,48 @@ int getRange(float lowerLimit, float upperLimit)
 	x=baseVal+baseRange;
 	return x;
 }
-void treasureData(treasure *currentTreas,player pData)
+void treasureData(room *currentRoom,player pData)
 {
-	currentTreas->treasVal=(getRange(pData.pLvl,pData.pLvl+5))*10;
+	currentRoom->roomTreasure.treasVal=(getRange(pData.pLvl,pData.pLvl+5))*10;
 }
-void weaponData(weapon *currentWeap, player pData)
+void weaponData(room *currentRoom, player pData)
 {
 	int max=pData.pLvl-3;
 	char weaponName[10][101]={"Sword","Shield","Water Bottle","Pencil","Balloon","All nighter","Booster C","Chair","Stick","Spoon"};
-	strcpy(currentWeap->weapName,weaponName[returnRand(10)]);//weapon Name
+	strcpy(currentRoom->roomWeapon.weapName,weaponName[returnRand(10)]);//weapon Name
 	if (max<0)
 		max=0;
-	currentWeap->weapVal=(getRange(max,pData.pLvl))*10;
-	currentWeap->weapDmg=getRange(pData.pLvl*0.1,pData.pLvl*0.5);
-	currentWeap->weapHP=getRange(1,5);	
+	currentRoom->roomWeapon.weapVal=(getRange(max,pData.pLvl))*10;
+	currentRoom->roomWeapon.weapDmg=getRange(pData.pLvl*0.1,pData.pLvl*0.5);
+	currentRoom->roomWeapon.weapHP=getRange(1,5);	
 }
-void armorData(armor *currentArmor, player pData)
+void armorData(room *currentRoom, player pData)
 {	
 	int max=pData.pLvl-3;
 	char armorName[10][101]={"T-Shirt","Polo-Shirt","Polo","Shorts","Yes","Jacket","Sweater","Steel Armor","Dress","Suit"};
-	strcpy(currentArmor->armorName,armorName[returnRand(10)]);//Armor name
+	strcpy(currentRoom->roomArmor.armorName,armorName[returnRand(10)]);//Armor name
 	if (max<0)
 		max=0;	
-	currentArmor->armorVal=(getRange(max,pData.pLvl+1))*10;
-	currentArmor->armorDef=getRange(pData.pLvl*0.1,pData.pLvl*0.7);
-	currentArmor->armorHp=getRange(1,5);
+	currentRoom->roomArmor.armorVal=(getRange(max,pData.pLvl+1))*10;
+	currentRoom->roomArmor.armorDef=getRange(pData.pLvl*0.1,pData.pLvl*0.7);
+	currentRoom->roomArmor.armorHp=getRange(1,5);
 }
-void enemData(enemy *currentEnem, player pData)
+void enemData(room *currentRoom, player pData)
 {
 	int max=pData.pLvl-3,maxHP=pData.pLvl-5;
 	char monsterName[10][41]={"COMPRO2","DISCTRU","GOBLIN","ORC","DLSU","SOCTEC1","CCSTRIG","DEADLINE","MP","SLEEP" };
-	strcpy(currentEnem->enemName,monsterName[returnRand(10)]);//Enem Name
+	strcpy(currentRoom->roomEnem.enemName,monsterName[returnRand(10)]);//Enem Name
 	if (max<0)
 		max=0;
 	if (maxHP<0)
 		maxHP=0;
-	currentEnem->enemDmg=(getRange(max,pData.pLvl+1))*0.3;
-	currentEnem->enemHP=getRange(maxHP,pData.pLvl);
+	currentRoom->roomEnem.enemDmg=(getRange(max,pData.pLvl+1))*.3;
+	currentRoom->roomEnem.enemHP=getRange(maxHP,pData.pLvl);
 }
-void dealDamage(enemy *currentEnem, player *pData)
+void dealDamage(room *currentRoom, player *pData)
 {
-	int max=currentEnem->enemDmg-pData->pDef;
-	currentEnem->enemHP-=pData->pDmg;
+	int max=currentRoom->roomEnem.enemDmg-pData->pDef;
+	currentRoom->roomEnem.enemHP-=pData->pDmg;
 	if (max<0)
 		max=1;
 	pData->pHP-=max;
@@ -240,23 +267,23 @@ int checkForTreasure(char box[][roomSize], int x, int y)
 	else return 0;
 }
 /******************************************************************************************************************************/
-void printBoard(char box[][roomSize],int Px, int Py, int Rx, int Ry,int roomAlgo[][3])
+void printBoard(char box[][roomSize],int totalRooms, room *currentRoom,int x,int y)
 {
 	int i,j;
 	system("cls");
-	printf(" W-A-S-D to move:\n P to Check Self\n\n player X: %d\n player Y: %d\n room X: %d\n room Y: %d\n Room Code: %d\n\n\t",Px,Py,Rx,Ry,roomAlgo[Rx][Ry]);
+	printf(" W-A-S-D to move:\n P to Check Self\n\n Room Code: %d\n\n Px: %d\n\n Py: %d\n\n Total Rooms explored: %d/%d\n\n\n\t\t",currentRoom->roomCode,x,y,totalRooms,roomLimit);
 	for(i=0;i<roomSize;i++)
 		{
 			for(j=0;j<roomSize;j++)
 			{
 				printf("%c",box[i][j]);
 			}
-			printf("\n\t");
+			printf("\n\t\t");
 		}
 	} 
-void  generateRoom (char box[][roomSize],int roomAlgo[][3],int a,int b,player pData,weapon *currentWeap,armor *currentArmor,enemy *currentEnem,treasure *currentTreas)
+void  generateRoom (char box[][roomSize],int roomAlgo[][3],int a,int b,player pData, room *currentRoom)
 {
-	int x,y,roomGate=roomAlgo[a][b];
+	int x,y,roomGate=currentRoom->roomCode;
 	for(x=0;x<roomSize;x++)
 		{
 			for(y=0;y<roomSize;y++)
@@ -268,44 +295,53 @@ void  generateRoom (char box[][roomSize],int roomAlgo[][3],int a,int b,player pD
 		}	
 	if (roomGate%1000000000/100000000)//Surface Link 
 	{	
-		box[roomSize/2][roomSize/2]='S';
+		box[getRange(1,roomSize-2)][getRange(1,roomSize-2)]='S';
 	}
 	if (roomGate%100000000/10000000)//Treasure
-	{
-		box[roomSize/2][roomSize/2]='T';	
+	{	
 		if (roomGate%100000000/10000000==1)
 		{
+			currentRoom->tLocX=getRange(1,roomSize-2);		
+			currentRoom->tLocY=getRange(1,roomSize-2);
 			roomGate+=10000000;		
-			treasureData(currentTreas,pData);
+			treasureData(currentRoom,pData);
 		}
+		box[currentRoom->tLocX][currentRoom->tLocY]='T';
 	}
 	if (roomGate%10000000/1000000)//Weapon	
 	{
-		box[roomSize/2][roomSize/2]='W';
 		if (roomGate%10000000/1000000==1)
 		{
-			weaponData(currentWeap,pData);
+			currentRoom->wLocX=getRange(1,roomSize-2);
+			currentRoom->wLocY=getRange(1,roomSize-2);
+			weaponData(currentRoom,pData);
 			roomGate+=1000000;
 		}
+		box[currentRoom->wLocX][currentRoom->wLocY]='W';			
 	}
 	if (roomGate%1000000/100000)//Armor
 	{
-		box[roomSize/2][roomSize/2]='A';	
 		if (roomGate%1000000/100000==1)
 		{
-			armorData(currentArmor,pData);	
+			currentRoom->aLocX=getRange(1,roomSize-2);
+			currentRoom->aLocY=getRange(1,roomSize-2);				
+			armorData(currentRoom,pData);	
 			roomGate+=100000;
 		}
+		box[currentRoom->aLocX][currentRoom->aLocY]='A';	
 	}
 	if (roomGate%100000/10000)//Monster
 	{
-		box[roomSize/2][roomSize/2]='M';
 		if (roomGate%100000/10000==1)
 		{
-			enemData(currentEnem,pData);
+			currentRoom->mLocX=getRange(1,roomSize-2);
+			currentRoom->mLocY=getRange(1,roomSize-2);	
+			enemData(currentRoom,pData);
 			roomGate+=10000;
 		}
+		box[currentRoom->mLocX][currentRoom->mLocY]='M';	
 	}
+//////////////////////////////////////////yes///////////////////////////////////////////////////////
 	if (roomGate%10000/1000)//North gate
 		box[0][roomSize/2]=' ';
 	if (roomGate%1000/100)//East gate
@@ -314,7 +350,7 @@ void  generateRoom (char box[][roomSize],int roomAlgo[][3],int a,int b,player pD
 		box[roomSize/2][0]=' ';
 	if (roomGate%10)//South gate
 		box[roomSize-1][roomSize/2]=' ';
-	roomAlgo[a][b]=roomGate;
+	currentRoom->roomCode=roomGate;
 }
 /******************************************************************************************************************************/
 void equipWeap(player *pData,weapon currentWeap)
@@ -355,8 +391,7 @@ void defaultGear(player *pData)
 }
 int returnRand(int choices)
 {
-    int randNum;
-    return randNum=rand()%choices;
+    return rand()%choices;
 }
 void pClear(player *pData)
 {
@@ -375,29 +410,39 @@ int isWithinRange(int x)
 void printSelection(char alphabet[],char ptr[],char currentName[])
 {
 	int i;
-	printf(" Name : %s",currentName);
+	printf("\n\n\t Name : %s",currentName);
 	for (i=0;i<26;i++)
 	{
 		if (i%7==0)
-			printf("\n\n");
-		printf("%c%c ",ptr[i],alphabet[i]);	
+			printf("\n\n\n\t");
+		printf("%c%c  ",ptr[i],alphabet[i]);	
 	}
-	printf("%cSpace",ptr[i]);
-	printf("\n\n G - Accept name\n Backspace - erase letter \n \\ - turn capslock on/off");
+	printf(" %cSpace",ptr[i]);
+	printf("\n\n\n\n\t G\t   - Accept name\n\n\t Backspace - erase letter \n\n\t \\\t   - Go uppercase\n\n\t ENTER\t   - select letter");
 }
 void nameGen(char currentName[])
 {
-	int i,j,tempX,PtrX=0,letter=0,min=65,max=90;
+	int i,j,tempX,PtrX=0,letter=0,min=65,max=90,upperCase=1;
 	char alphabet[27], ptr[27]={'>',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' '},input;
 	alphabet[26]=' ';
 	do{
+		if (upperCase||!letter)
+		{
+			min=65;
+			max=90;			
+		}
+		else
+		{
+			min=97;
+			max=122;
+		}
 		for (i=min,j=0;i<=max;i++,j++)
 			alphabet[j]=i;	
 		system("cls");
 		printSelection(alphabet,ptr,currentName);
 		do{
 			input=getch();		
-		}while(input!='w'&&input!='a'&&input!='s'&&input!='d'&&input!='\r'&&input!='\b'&&input!='g'&&input!='\\');
+		}while(input!='w'&&input!='a'&&input!='s'&&input!='d'&&input!='\r'&&input!='\b'&&input!='g'&&input!='\\'&&input!='G');
 		tempX=PtrX;
 		switch (input)
 		{
@@ -428,22 +473,39 @@ void nameGen(char currentName[])
 			case '\r':
 					currentName[letter]=alphabet[PtrX];
 					letter++;
+					upperCase=0;
+					if (PtrX==26)
+						upperCase=1;
 					break;
-			case '\b':currentName[letter-1]=' ';
-					letter--;break;
-			case '\\':if (min==65&&max==90)
+			case '\b':
+					if (letter>0)
 					{
-						min=97;
-						max=122;
+						currentName[letter-1]=' ';
+						letter--;break;
 					}
-					else 
-					{
-						min=65;
-						max=90;
-					}break;
+			case '\\':upperCase=1;break;
 		}
 		ptr[PtrX]='>';	
-	}while(input!='g');
+	}while(input!='g'&&input!='G');
+}
+////////////////////////////////////////////////////////////////////////////////////////
+int genRoomCode(int source)
+{
+	int i,code=10;
+	for(i=0;i<4;i++)
+		code=code*10+returnRand(2);
+	for(i=0;i<4;i++)
+	{
+		code=code*10+returnRand(4);
+		if(code%10!=0)
+		{
+			code-=code%10;
+			code+=1;
+		}
+	}
+	if(code%(source*10)/source==0)
+		code+=source;
+	return code;
 }
 int main()
 {
@@ -460,19 +522,26 @@ int main()
         ,randNum//contains the random number
         ,killedEnem=0//counts the number of enemy kills to level up
         ,totalEnem=0//counts how many enemies you've killed so far
-		,playerHP;//player HP 
+		,playerHP//player HP 
+		,totalRooms=1;//counts the total number of rooms explored
 	char move//user input for player interaction
 		,box[roomSize][roomSize]//room array
 		,playerName[101]=""//player's name
 		,dataName[9][30]={"","SP   ","exp  ","Level","dmg  ","def  ","hp   ","con  ","Money"}//starting skill names
 		,temp[51];//temporary player name holder
 	
+	
 	srand(time(NULL));
 	struct playerTag pData;
-	struct enemyTag currentEnem;
-	struct weaponTag currentWeap;
-	struct armorTag currentArmor;
-	struct treasureTag currentTreas;
+	struct roomTag *currentRoom, *newRoom, spawnRoom;
+	
+	spawnRoom.roomCode=1000001111;
+	currentRoom=&spawnRoom;
+	spawnRoom.eastRoom=NULL;
+	spawnRoom.northRoom=NULL;
+	spawnRoom.southRoom=NULL;
+	spawnRoom.westRoom=NULL;
+	
 	nameGen(playerName);
 	
 	strcat(dataName[0],"Name : ");
@@ -495,16 +564,9 @@ int main()
 		calcStats(&pData);
 		pData.pHP=playerHP;	
 
-		if (Rx==1&&Ry==1)
-		{
-			roomAlgo[0][1]=1000010001;
-			roomAlgo[1][0]=1010000100;
-			roomAlgo[1][2]=1001000010;
-			roomAlgo[2][1]=1000101000;
-		}
-		generateRoom(box,roomAlgo,Rx,Ry,pData,&currentWeap,&currentArmor,&currentEnem,&currentTreas);
+		generateRoom(box,roomAlgo,Rx,Ry,pData,currentRoom);
 		box[Px][Py]=playerSymbol;
-		printBoard(box,Px,Py,Rx,Ry,roomAlgo);
+		printBoard(box,totalRooms,currentRoom,Px,Py);
 		do{
 			move=getch();
 		}while(move!='W'&&move!='A'&&move!='S'&&move!='D'&&move!='w'&&move!='a'&&move!='s'&&move!='d'&&move!='E'&&move!='d'&&move!='p');
@@ -517,45 +579,60 @@ int main()
 			case 'w'://north/up//////////////////////////////////////////////////////////////////////////////////
 					if (checkForEnem(box,tempX-1,Py))
 					{
-						dealDamage(&currentEnem,&pData);
+						dealDamage(currentRoom,&pData);
 						playerHP=pData.pHP;
-						if(currentEnem.enemHP<=0&&pData.pHP>0)
+						if(currentRoom->roomEnem.enemHP<=0&&pData.pHP>0)
 						{
 							Px--;
 							playerHP+=pData.pCon;
 							if (playerHP>pData.pMaxHP)
 								playerHP=pData.pHP=pData.pMaxHP;
-							roomAlgo[Rx][Ry]-=20000;
+							currentRoom->roomCode-=20000;
 							pData.pExp++;
 							totalEnem++;
 						}
 					}
 					else if(checkForArmor(box,tempX-1,Py))
 					{
-						roomAlgo[Rx][Ry]-=200000;
-						equipArmor(&pData,currentArmor);
-						pData.pArmor=currentArmor;
+						currentRoom->roomCode-=200000;
+						equipArmor(&pData,currentRoom->roomArmor);
+						pData.pArmor=currentRoom->roomArmor;
 						Px--;
 					}
 					else if(checkForWeap(box,tempX-1,Py))
 					{
-						roomAlgo[Rx][Ry]-=2000000;
-						equipWeap(&pData,currentWeap);
-						pData.pWeapon=currentWeap;
+						currentRoom->roomCode-=2000000;
+						equipWeap(&pData,currentRoom->roomWeapon);
+						pData.pWeapon=currentRoom->roomWeapon;
 						Px--;
 					}
 					else if(checkForTreasure(box,tempX-1,Py))
 					{
-						roomAlgo[Rx][Ry]-=20000000;
-						pData.pMoney+=currentTreas.treasVal;
+						currentRoom->roomCode-=20000000;
+						pData.pMoney+=currentRoom->roomTreasure.treasVal;
 						Px--;
 						pData.pExp++;
 						
 					}
 					else if (checkForNextRoom(box,tempX-1,Py))
 					{
-						Rx--;
+						if (currentRoom->northRoom!=NULL)
+							currentRoom=currentRoom->northRoom;
+						else 
+						{
+							newRoom=malloc(sizeof(room));
+							newRoom->roomCode=genRoomCode(1);
+							newRoom->northRoom=NULL;
+							newRoom->eastRoom=NULL;	
+							newRoom->westRoom=NULL;
+							newRoom->southRoom=currentRoom;
+							currentRoom->northRoom=newRoom;			
+							newRoom=NULL;
+							currentRoom=currentRoom->northRoom;	
+							totalRooms++;										
+						}
 						Px=roomSize-1;
+						Py=roomSize/2;						
 					}
 					else if (checkForWall(box,tempX-1,Py))
 					{
@@ -565,43 +642,59 @@ int main()
 			case 'd'://east/right//////////////////////////////////////////////////////////////////////////////////
 					if (checkForEnem(box,Px,tempY+1))
 					{
-						dealDamage(&currentEnem,&pData);
-						if(currentEnem.enemHP<=0&&pData.pHP>0)
+						dealDamage(currentRoom,&pData);
+						playerHP=pData.pHP;
+						if(currentRoom->roomEnem.enemHP<=0&&pData.pHP>0)
 						{
 							Py++;
 							pData.pHP+=pData.pCon;
 							if (playerHP>pData.pMaxHP)
 								playerHP=pData.pHP=pData.pMaxHP;
-							roomAlgo[Rx][Ry]-=20000;
+							currentRoom->roomCode-=20000;
 							pData.pExp++;
 							totalEnem++;
 						}
 					}
 					else if(checkForArmor(box,Px,tempY+1))
 					{
-						roomAlgo[Rx][Ry]-=200000;
-						equipArmor(&pData,currentArmor);						
-						pData.pArmor=currentArmor;
+						currentRoom->roomCode-=200000;
+						equipArmor(&pData,currentRoom->roomArmor);
+						pData.pArmor=currentRoom->roomArmor;
 						Py++;
 					}
 					else if(checkForWeap(box,Px,tempY+1))
 					{
-						roomAlgo[Rx][Ry]-=2000000;
-						equipWeap(&pData,currentWeap);
-						pData.pWeapon=currentWeap;
+						currentRoom->roomCode-=2000000;
+						equipWeap(&pData,currentRoom->roomWeapon);
+						pData.pWeapon=currentRoom->roomWeapon;
 						Py++;
 					}
 					else if(checkForTreasure(box,Px,tempY+1))
 					{
-						roomAlgo[Rx][Ry]-=20000000;
-						pData.pMoney+=currentTreas.treasVal;
+						currentRoom->roomCode-=20000000;
+						pData.pMoney+=currentRoom->roomTreasure.treasVal;
 						pData.pExp++;
 						Py++;
 					}
 					else if (checkForNextRoom(box,Px,tempY+1))
 					{
-						Ry++;
+						if (currentRoom->eastRoom!=NULL)
+							currentRoom=currentRoom->eastRoom;
+						else
+						{
+							newRoom=malloc(sizeof(room));
+							newRoom->roomCode=genRoomCode(10);
+							newRoom->northRoom=NULL;
+							newRoom->eastRoom=NULL;
+							newRoom->westRoom=currentRoom;
+							newRoom->southRoom=NULL;
+							currentRoom->eastRoom=newRoom;
+							currentRoom=currentRoom->eastRoom;
+							newRoom=NULL;
+							totalRooms++;
+						}
 						Py=0;
+						Px=roomSize/2;
 					}
 					else if (checkForWall(box,Px,tempY+1))
 					{
@@ -611,43 +704,59 @@ int main()
 			case 'a'://west/left//////////////////////////////////////////////////////////////////////////////////
 					if (checkForEnem(box,Px,tempY-1))
 					{
-						dealDamage(&currentEnem,&pData);
-						if(currentEnem.enemHP<=0&&pData.pHP>0)
+						dealDamage(currentRoom,&pData);
+						playerHP=pData.pHP;
+						if(currentRoom->roomEnem.enemHP<=0&&pData.pHP>0)
 						{
 							Py--;
 							pData.pHP+=pData.pCon;
 							if (playerHP>pData.pMaxHP)
 								playerHP=pData.pHP=pData.pMaxHP;
-							roomAlgo[Rx][Ry]-=20000;
+							currentRoom->roomCode-=20000;
 							pData.pExp++;
 							totalEnem++;
 						}
 					}
 					else if(checkForArmor(box,Px,tempY-1))
 					{
-						roomAlgo[Rx][Ry]-=200000;
-						equipArmor(&pData,currentArmor);						
-						pData.pArmor=currentArmor;
+						currentRoom->roomCode-=200000;
+						equipArmor(&pData,currentRoom->roomArmor);
+						pData.pArmor=currentRoom->roomArmor;
 						Py--;
 					}
 					else if(checkForWeap(box,Px,tempY-1))
 					{
-						roomAlgo[Rx][Ry]-=2000000;
-						equipWeap(&pData,currentWeap);
-						pData.pWeapon=currentWeap;
+						currentRoom->roomCode-=2000000;
+						equipWeap(&pData,currentRoom->roomWeapon);
+						pData.pWeapon=currentRoom->roomWeapon;
 						Py--;
 					}
 					else if(checkForTreasure(box,Px,tempY-1))
 					{
-						roomAlgo[Rx][Ry]-=20000000;
-						pData.pMoney+=currentTreas.treasVal;
+						currentRoom->roomCode-=20000000;
+						pData.pMoney+=currentRoom->roomTreasure.treasVal;
 						pData.pExp++;
 						Py--;
 					}
 					else if (checkForNextRoom(box,Px,tempY-1))
 					{
-						Ry--;
+						if (currentRoom->westRoom!=NULL)
+							currentRoom=currentRoom->westRoom;
+						else
+						{
+							newRoom=malloc(sizeof(room));
+							newRoom->roomCode=genRoomCode(100);
+							newRoom->northRoom=NULL;
+							newRoom->eastRoom=currentRoom;	
+							newRoom->westRoom=NULL;
+							newRoom->southRoom=NULL;
+							currentRoom->westRoom=newRoom;
+							currentRoom=currentRoom->westRoom;
+							newRoom=NULL;
+							totalRooms++;
+						}
 						Py=roomSize-1;
+						Px=roomSize/2;
 					}
 					else if (checkForWall(box,Px,tempY-1))
 					{
@@ -657,43 +766,58 @@ int main()
 			case 's'://south/down//////////////////////////////////////////////////////////////////////////////////
 					if (checkForEnem(box,tempX+1,Py))
 					{
-						dealDamage(&currentEnem,&pData);
-						if(currentEnem.enemHP<=0&&pData.pHP>0)
+						dealDamage(currentRoom,&pData);
+						playerHP=pData.pHP;
+						if(currentRoom->roomEnem.enemHP<=0&&pData.pHP>0)
 						{
 							Px++;
 							pData.pHP+=pData.pCon;
 							if (playerHP>pData.pMaxHP)
 								playerHP=pData.pHP=pData.pMaxHP;
-							roomAlgo[Rx][Ry]-=20000;
+							currentRoom->roomCode-=20000;
 							pData.pExp++;
 							totalEnem++;
 						}
 					}
 					else if(checkForArmor(box,tempX+1,Py))
 					{
-						roomAlgo[Rx][Ry]-=200000;
-						equipArmor(&pData,currentArmor);						
-						pData.pArmor=currentArmor;
+						currentRoom->roomCode-=200000;
+						equipArmor(&pData,currentRoom->roomArmor);
+						pData.pArmor=currentRoom->roomArmor;
 						Px++;
 					}
 					else if(checkForWeap(box,tempX+1,Py))
 					{
-						roomAlgo[Rx][Ry]-=2000000;
-						equipWeap(&pData,currentWeap);
-						pData.pWeapon=currentWeap;
+						currentRoom->roomCode-=2000000;
+						equipWeap(&pData,currentRoom->roomWeapon);
+						pData.pWeapon=currentRoom->roomWeapon;
 						Px++;
 					}
 					else if(checkForTreasure(box,tempX+1,Py))
 					{
-						roomAlgo[Rx][Ry]-=20000000;
-						pData.pMoney+=currentTreas.treasVal;
+						currentRoom->roomCode-=20000000;
+						pData.pMoney+=currentRoom->roomTreasure.treasVal;
 						pData.pExp++;
 						Px++;
 					}					
 					else if (checkForNextRoom(box,tempX+1,Py))
 					{
-						Rx++;
+						if (currentRoom->southRoom!=NULL)
+							currentRoom=currentRoom->southRoom;
+						else
+						{
+							newRoom=malloc(sizeof(room));
+							newRoom->roomCode=genRoomCode(1000);
+							newRoom->northRoom=currentRoom;
+							newRoom->eastRoom=NULL;	
+							newRoom->westRoom=NULL;
+							newRoom->southRoom=NULL;
+							currentRoom->southRoom=newRoom;
+							currentRoom=currentRoom->southRoom;
+							newRoom=NULL;
+						}
 						Px=0;
+						Py=roomSize/2;
 					}
 					else if (checkForWall(box,tempX+1,Py))
 					{
@@ -704,14 +828,19 @@ int main()
 		box[Px][Py]=playerSymbol;
 		tempX=0;
 		tempY=0;	
-	}while(move!='E'&&pData.pHP>0);
+	}while(move!='E'&&pData.pHP>0&&totalRooms!=roomLimit);
 	system("cls");
 	if (pData.pHP<=0)	
 	{
 		box[Px][Py]='X';
-		printBoard(box,Px,Py,Rx,Ry,roomAlgo);
+		printBoard(box,totalRooms,currentRoom,Px,Py);
 		printf("YOU DIED.");
 		printf("\nYou have killed a total of %d enemies",totalEnem);
+	}
+	else if(totalRooms>=roomLimit)
+	{
+		printBoard(box,totalRooms,currentRoom,Px,Py);
+		printf("hoy cheater you cant win the game yet hoy");
 	}
 	else printf("Test End.");
 }	
