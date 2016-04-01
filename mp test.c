@@ -72,7 +72,7 @@ struct  roomTag{
 };
 struct invTag{
 	char itemName[101];
-	char itemType[21];
+	char itemType;
 	char ptr;
 	int val;
 	int dmg;
@@ -200,10 +200,10 @@ int getRange(float lowerLimit, float upperLimit)
 }
 void treasureData(room *currentRoom,player pData,FILE *treasureNames,int treasureNum)
 {
-	char chosen[101];
+	char chosen[101],filler;
 	int i;
 	for (i=0;i<returnRand(treasureNum);i++)
-		fscanf(treasureNames,"%s",chosen);
+		fscanf(treasureNames," %c%s",filler,chosen);
 	for(i=0;i<strlen(chosen);i++)
 		if(chosen[i]==',')
 			chosen[i]=' ';
@@ -213,16 +213,14 @@ void treasureData(room *currentRoom,player pData,FILE *treasureNames,int treasur
 void weaponData(room *currentRoom, player pData,FILE *weaponNames,int weaponNum)
 {
 	int i,max=pData.pLvl-3;
-	char chosen[101];
+	char chosen[101],filler;
 	if (max<0)
 		max=0;
 	for (i=0;i<returnRand(weaponNum);i++)
-		fscanf(weaponNames,"%s",chosen);
+		fscanf(weaponNames," %c%s",&filler,chosen);
 	for(i=0;i<strlen(chosen);i++)
 		if(chosen[i]==',')
 			chosen[i]=' ';
-	printf("%s",chosen);
-	getch();
 	strcpy(currentRoom->roomWeapon.weapName,chosen);	
 	currentRoom->roomWeapon.weapVal=(getRange(max,pData.pLvl))*10;
 	currentRoom->roomWeapon.weapDmg=getRange(pData.pLvl*0.1,pData.pLvl*0.5);
@@ -231,9 +229,9 @@ void weaponData(room *currentRoom, player pData,FILE *weaponNames,int weaponNum)
 void armorData(room *currentRoom, player pData, FILE *armorNames,int armorNum)
 {	
 	int i,max=pData.pLvl-3;
-	char chosen[101];
+	char chosen[101],filler;
 	for(i=0;i<returnRand(armorNum);i++)
-		fscanf(armorNames,"%s",chosen);
+		fscanf(armorNames," %c%s",&filler,chosen);
 	for(i=0;i<strlen(chosen);i++)
 	{
 		if(chosen[i]==',')
@@ -253,9 +251,9 @@ void armorData(room *currentRoom, player pData, FILE *armorNames,int armorNum)
 void enemData(room *currentRoom, player pData,FILE *enemyNames,int enemNum)
 {
 	int max=pData.pLvl-3,maxHP=pData.pLvl-5,i;
-	char chosen[101];
+	char chosen[101],filler;
 	for(i=0;i<returnRand(enemNum);i++)
-		fscanf(enemyNames,"%s",chosen);
+		fscanf(enemyNames,"%c%s",&filler,chosen);
 	for(i=0;i<strlen(chosen);i++)
 		if(chosen[i]==',')
 			chosen[i]=' ';
@@ -265,7 +263,7 @@ void enemData(room *currentRoom, player pData,FILE *enemyNames,int enemNum)
 	if (maxHP<0)
 		maxHP=0;
 	currentRoom->roomEnem.enemDmg=(getRange(max,pData.pLvl+1))*.3;
-	currentRoom->roomEnem.boss=1;
+	currentRoom->roomEnem.boss=1;//returnRand(10);
 	if (currentRoom->roomEnem.boss==1)
 	{
 		currentRoom->roomEnem.enemHP=(getRange(maxHP,pData.pLvl))*3;
@@ -579,17 +577,16 @@ int genRoomCode(int source)
 	code=code*10+returnRand(5);//20% chance for treasure to appear
 	if (code%10!=1)
 		code-=code%10;
-	code=code*10+returnRand(1);//20% chance for weapon to appear
+	code=code*10+returnRand(3);//33% chance for weapon to appear
 	if (code%10!=1)
 		code-=code%10;
-	code=code*10+returnRand(5);//20% chance for armor to appear
+	code=code*10+returnRand(3);//33% chance for armor to appear
 	if (code%10!=1)
 		code-=code%10;
 	code=code*10+returnRand(2);//50% chance for enemy to appear
-
 	for(i=0;i<4;i++)//for loop for gates
 	{
-		code=code*10+returnRand(4);
+		code=code*10+returnRand(4);//
 		if(code%10!=0)
 		{
 			code-=code%10;
@@ -723,17 +720,6 @@ int countFiles(FILE *source)
 	fclose(source);
 	return x;
 }
-void viewInv(char weapInv[][51],char armorInv[][51],char treasInv[][51],int weapBase,int armorBase,int treasBase,char input)
-{
-	int x,tempX,start=0,i;
-	do{
-		x=0;
-		
-		do{
-		}while(input!='t'&&input!='y'&&input!='u'&&input!='\r');
-		
-	}while(input!='\r');
-}
 void playerInventory(inv **baseWep,inv **baseTreas,inv **baseArmor,player *pData)
 {
 	int i,x,tempX;
@@ -742,10 +728,10 @@ void playerInventory(inv **baseWep,inv **baseTreas,inv **baseArmor,player *pData
 		
 	}while(input!='\r');
 }
-void createFiles(char playerName[101],FILE **mapcodes, FILE **mapdir,FILE **pstats,FILE **weapinv,FILE **weapstats,FILE **armorstats,FILE **armorinv,FILE **treasinv,FILE **treasstats,FILE **tempmap, FILE **tempdir)
+void createFiles(char playerName[101],FILE **mapcodes, FILE **mapdir,FILE **pstats,FILE **invname,FILE **invstats,FILE **tempmap, FILE **tempdir)
 {
-	char saveFileName[101],createFolder[101]="mkdir ",folderDIR[101]="./",mapCodes[51],mapDir[51],pStats[51],tempMap[51],tempDir[51];
-	char weapInv[51],armorInv[51],treasInv[51],weapStats[51],armorStats[51],treasStats[51];
+	char saveFileName[101],createFolder[101]="mkdir ",folderDIR[101]="./",mapCodes[51],mapDir[51],pStats[51],tempMap[51],tempDir[51],invStats[51],invName[51];
+
 	FILE *saveNames;
 
 	strcat(createFolder,playerName);
@@ -766,28 +752,16 @@ void createFiles(char playerName[101],FILE **mapcodes, FILE **mapdir,FILE **psta
 	strcpy(pStats,folderDIR);
 	strcat(pStats,"pStats.txt");
 	
+	strcpy(invName,folderDIR);
+	strcat(invName,"invName.txt");
+	
+	strcpy(invStats,folderDIR);
+	strcat(invStats,"invStats.txt");
+				
 	strcpy(saveFileName,folderDIR);
 	strcat(saveFileName,playerName);
 	strcat(saveFileName,".txt");	
-	
-	strcpy(weapInv,folderDIR);
-	strcat(weapInv,"weapInv.txt");
-	
-	strcpy(weapStats,folderDIR);
-	strcat(weapStats,"weapStats.txt");
-	
-	strcpy(armorInv,folderDIR);
-	strcat(armorInv,"armorInv.txt");
-	
-	strcpy(armorStats,folderDIR);
-	strcat(armorStats,"armorStats.txt");
-	
-	strcpy(treasInv,folderDIR);
-	strcat(treasInv,"treasInv.txt");
-	
-	strcpy(treasStats,folderDIR);
-	strcat(treasStats,"treasStats.txt");
-	
+
 	strcpy(tempMap,folderDIR);
 	strcat(tempMap,"tempMap.txt");
 	
@@ -797,12 +771,8 @@ void createFiles(char playerName[101],FILE **mapcodes, FILE **mapdir,FILE **psta
 	*mapcodes=fopen(mapCodes,"w");
 	*mapdir=fopen(mapDir,"w");
 	*pstats=fopen(pStats,"w");
-	*weapinv=fopen(weapInv,"w");
-	*weapstats=fopen(weapStats,"w");
-	*armorstats=fopen(armorStats,"w");
-	*armorinv=fopen(armorInv,"w");
-	*treasinv=fopen(treasInv,"w");
-	*treasstats=fopen(treasStats,"w");
+	*invname=fopen(invName,"w");
+	*invstats=fopen(invStats,"w");
 	*tempmap=fopen(tempMap,"w");
 	*tempdir=fopen(tempDir,"w");
 	
@@ -851,6 +821,25 @@ int loadGame(char array[][101],int base)
 	}while(input!='\r');
 	return x;
 }
+void saveMap(FILE *source,FILE *source2, room *currentRoom,char dir)
+{
+	fprintf(source,"%d ",currentRoom->roomCode);
+
+	if (currentRoom->mLocX==NULL&&currentRoom->mLocY==NULL)
+		currentRoom->mLocX=currentRoom->mLocY=0;
+	if (currentRoom->aLocX==NULL&&currentRoom->aLocY==NULL)
+		currentRoom->aLocX=currentRoom->aLocY=0;
+	if (currentRoom->wLocX==NULL&&currentRoom->wLocY==NULL)
+		currentRoom->wLocX=currentRoom->wLocY=0;
+	if (currentRoom->tLocX==NULL&&currentRoom->tLocY==NULL)
+		currentRoom->tLocX=currentRoom->tLocY=0;
+
+	fprintf(source,"%d %d ",currentRoom->mLocX,currentRoom->mLocY);
+	fprintf(source,"%d %d ",currentRoom->aLocX,currentRoom->aLocY);
+	fprintf(source,"%d %d ",currentRoom->wLocX,currentRoom->wLocY);
+	fprintf(source,"%d %d\n",currentRoom->tLocX,currentRoom->tLocY);
+	fprintf(source2,"%c\n",dir);	
+}
 int main()
 {
 	int	i//loop
@@ -875,7 +864,10 @@ int main()
 		,weaponNum=0
 		,treasureNum=0
 		,bossNum=0
-		,loadNum;
+		,loadNum
+		,wInvNum=0
+		,tInvNum=0
+		,aInvNum=0;
 		
 	char move//user input for player interaction
 		,box[roomSize][roomSize]//room array
@@ -886,16 +878,12 @@ int main()
 		,mapCodesN[51]
 		,mapDirN[51]
 		,pStatsN[51]
-		,weapInvN[51]
-		,weapStatsN[51]
-		,armorStatsN[51]
-		,armorInvN[51]
-		,treasInvN[51]
-		,treasStatsN[51]
+		,invStatsN[51]
+		,invNameN[51]
 		,tempMapN[51]
 		,tempDirN[51]
 		,folderDIR[51]="./"
-		,scanned;
+		,trash;
 		
 	srand(time(NULL));
 	struct playerTag pData;
@@ -911,14 +899,18 @@ int main()
 	inv *baseWeap,*baseArmor,*baseTreas;
 	inv *newWeap,*newArmor,*newTreas;
 	inv *lastWeap,*lastArmor,*lastTreas;
-	baseWeap=malloc(sizeof(inv));
-	baseArmor=malloc(sizeof(inv));
-	baseTreas=malloc(sizeof(inv));
 	
-	FILE *boss,*monster,*armor,*weapon,*treasure,*fTitle,*saveNames,*currentSave;
+	lastWeap=baseWeap=newWeap=malloc(sizeof(inv));
+	lastArmor=baseArmor=newArmor=malloc(sizeof(inv));
+	lastTreas=baseTreas=newTreas=malloc(sizeof(inv));
 	
-	FILE *mapCodes, *mapDir,*pStats,*weapInv,*weapStats,*armorStats,*armorInv,*treasInv,*treasStats,*tempMap,*tempDir;
-
+	
+	
+	
+	
+	FILE *boss,*monster,*armor,*weapon,*treasure,*fTitle,*saveNames,*currentSave,*printNames;
+	
+	FILE *mapCodes, *mapDir,*pStats,*weapInv,*invName,*invStats,*tempInv,*tempInvStats,*tempMap,*tempDir,*tempStats;
 
 	boss=fopen("bossNames.txt","r");
 	monster=fopen("monsterNames.txt","r");
@@ -939,6 +931,14 @@ int main()
 	weaponNum=countFiles(weapon);
 	treasureNum=countFiles(treasure);
 	saveNum=countFiles(saveNames);
+
+	fclose(boss);
+	fclose(monster);
+	fclose(armor);
+	fclose(weapon);
+	fclose(treasure);
+	fclose(saveNames);
+	fclose(fTitle);
 	
 	boss=fopen("bossNames.txt","r");
 	monster=fopen("monsterNames.txt","r");
@@ -948,21 +948,11 @@ int main()
 	fTitle=fopen("titleScreen.txt","r");
 	saveNames=fopen("saveNames.txt","r");	
 
-	char pNames[saveNum+1][101];
+	char pNames[saveNum][101];
 	
 	for (i=0;i<saveNum;i++)
-		fscanf(saveNames,"%s",pNames[i]);
+		fscanf(saveNames," %c%s",&trash,pNames[i]);
 
-	for (i=0;i<saveNum;i++)
-	{
-		for(j=0;j<strlen(pNames[i]);j++)
-		{
-			if (pNames[i][j]=='.')
-				pNames[i][j]='\b';
-			else if (pNames[i][j]==',')
-				pNames[i][j]=' ';
-		}
-	}
 	fclose(saveNames);
 	for(i=0;i<17;i++)
 		fscanf(fTitle,"%s",title[i]);
@@ -971,58 +961,48 @@ int main()
 			if(title[i][j]=='.')
 				title[i][j]=' ';
 
-	do{
-		gameSelect=titleScreen(title,saveNum);
-		if (gameSelect==1)
-		{
-			loadNum=loadGame(pNames,saveNum);
-			strcpy(playerName,pNames[loadNum]);
-			strcat(folderDIR,playerName);
-			strcat(folderDIR,"Save");
-			strcat(folderDIR,"/");
-			strcpy(mapCodesN,folderDIR);
-			strcat(mapCodesN,"mapCodes.txt");
-			strcpy(mapDirN,folderDIR);
-			strcat(mapDirN,"mapDir.txt");
-			strcpy(pStatsN,folderDIR);
-			strcat(pStatsN,"pStats.txt");	
-			strcpy(weapInvN,folderDIR);
-			strcat(weapInvN,"weapInv.txt");
-			strcpy(weapStatsN,folderDIR);
-			strcat(weapStatsN,"weapStats.txt");
-			strcpy(armorInvN,folderDIR);
-			strcat(armorInvN,"armorInv.txt");
-			strcpy(armorStatsN,folderDIR);
-			strcat(armorStatsN,"armorStats.txt");
-			strcpy(treasInvN,folderDIR);
-			strcat(treasInvN,"treasInv.txt");
-			strcpy(treasStatsN,folderDIR);
-			strcat(treasStatsN,"treasStats.txt");
-			strcpy(tempMapN,folderDIR);
-			strcat(tempMapN,"tempMap.txt");
-			strcpy(tempDirN,folderDIR);
-			strcat(tempDirN,"tempDir.txt");
-			
-			mapCodes=fopen(mapCodesN,"a");
-			mapDir=fopen(mapDirN,"a");
-			pStats=fopen(pStatsN,"r");
-			weapInv=fopen(weapInvN,"r");
-			weapStats=fopen(weapStatsN,"r");
-			armorStats=fopen(armorStatsN,"r");
-			armorInv=fopen(armorInvN,"r");
-			treasInv=fopen(treasInvN,"r");
-			treasStats=fopen(treasStatsN,"r");
-			tempMap=fopen(tempMapN,"w");
-			tempDir=fopen(tempDirN,"w");
-			for(i=1;i<=6;i++)
-				fscanf(pStats,"%d",data[i]);
-			transSkills(data,&pData);
-			fscanf(pStats,"%d",pData.pMoney);
-			fscanf(pStats,"%d",pData.pMaxHP);
-		}
+
+	gameSelect=titleScreen(title,saveNum);
+	if (gameSelect==1)
+	{
+		loadNum=loadGame(pNames,saveNum);
+		strcpy(playerName,pNames[loadNum]);
+		strcat(folderDIR,playerName);
+		strcat(folderDIR,"Save");
+		strcat(folderDIR,"/");
+		strcpy(mapCodesN,folderDIR);
+		strcat(mapCodesN,"mapCodes.txt");
+		strcpy(mapDirN,folderDIR);
+		strcat(mapDirN,"mapDir.txt");
+		strcpy(pStatsN,folderDIR);
+		strcat(pStatsN,"pStats.txt");	
+		strcpy(invNameN,folderDIR);
+		strcat(invNameN,"invName.txt");
+		strcpy(invStatsN,folderDIR);
+		strcat(invStatsN,"invStats.txt");
+		strcat(tempMapN,"tempMap.txt");
+		strcpy(tempDirN,folderDIR);
+		strcat(tempDirN,"tempDir.txt");
 		
-	}while(saveFile==-1&&gameSelect==1);
-	fclose(saveNames);
+		mapCodes=fopen(mapCodesN,"a");
+		mapDir=fopen(mapDirN,"a");
+		pStats=fopen(pStatsN,"r");
+		invName=fopen(invNameN,"r");
+		invStats=fopen(invStatsN,"r");
+		tempMap=fopen(tempMapN,"w");
+		tempDir=fopen(tempDirN,"w");
+		printf("%s",pStatsN);
+		for(i=1;i<=6;i++)
+			fscanf(pStats,"%d",&data[i]);
+		for(i=1;i<=6;i++)
+			printf("%d\n",data[i]);
+		getch();	
+			
+		transSkills(data,&pData);
+		fscanf(pStats,"%d",pData.pMoney);
+		fscanf(pStats,"%d",pData.pMaxHP);
+	}
+
 	if (gameSelect==0)
 	{
 		
@@ -1032,7 +1012,7 @@ int main()
 		strcat(dataName[0],playerName);
 		strcpy(pData.pName,dataName[0]);
 		
-		createFiles(playerName,&mapCodes, &mapDir,&pStats,&weapInv,&weapStats,&armorStats,&armorInv,&treasInv,&treasStats,&tempMap,&tempDir);
+		createFiles(playerName,&mapCodes, &mapDir,&pStats,&invName,&invStats,&tempMap,&tempDir);
 		
 		playerData(dataName,data);
 		transSkills(data,&pData);
@@ -1044,19 +1024,17 @@ int main()
 		fprintf(pStats,"%d\n",pData.pMoney);
 		fprintf(pStats,"%d\n",pData.pHP);
 		fprintf(pStats,"%d",playerHP);
-		
-		saveNames=fopen("saveNames.txt","w");
-		for(i=0;i<saveNum;i++)
-		{
-			for(j=0;pNames[i][j]=='\n';j++)
-			{
-				if(j==0)
-					fprintf(saveNames,".");
-				
-			}
-		}
+		saveNum++;
+		strcpy(pNames[saveNum-1],playerName);
 	}
-	
+	for(i=0;i<saveNum;i++)
+		printf("%s\n",pNames[i]);
+	getch();
+	printNames=fopen("saveNames.txt","w");
+	for(i=0;i<saveNum;i++)
+		fprintf(printNames,".%s\n",pNames[i]);	
+	fprintf(printNames,"#");
+	fclose(printNames);
 	do{/////////////////////////////////////////GAME START/////////////////////////////////////////////////////////
 		if (pData.pExp==getRoundedVal(pData.pLvl*0.3))
 		{
@@ -1105,8 +1083,7 @@ int main()
 							if (playerHP>pData.pMaxHP)
 								playerHP=pData.pHP=pData.pMaxHP;
 							currentRoom->roomCode-=20000;
-							fprintf(tempMap,"%d\n",currentRoom->roomCode);
-							fprintf(tempDir,"x\n");	
+							saveMap(tempMap,tempDir,currentRoom,'x');
 							pData.pExp++;
 							totalEnem++;
 						}
@@ -1114,8 +1091,7 @@ int main()
 					else if(checkForArmor(box,tempX-1,Py))
 					{
 						currentRoom->roomCode-=200000;
-						fprintf(tempMap,"%d\n",currentRoom->roomCode);
-						fprintf(tempDir,"x\n");
+						saveMap(tempMap,tempDir,currentRoom,'x');
 						equipArmor(&pData,currentRoom->roomArmor);
 						pData.pArmor=currentRoom->roomArmor;
 						Px--;
@@ -1123,8 +1099,7 @@ int main()
 					else if(checkForWeap(box,tempX-1,Py))
 					{
 						currentRoom->roomCode-=2000000;
-						fprintf(tempMap,"%d\n",currentRoom->roomCode);
-						fprintf(tempDir,"x\n");
+						saveMap(tempMap,tempDir,currentRoom,'x');
 						equipWeap(&pData,currentRoom->roomWeapon);
 						pData.pWeapon=currentRoom->roomWeapon;
 						Px--;
@@ -1132,8 +1107,7 @@ int main()
 					else if(checkForTreasure(box,tempX-1,Py))
 					{
 						currentRoom->roomCode-=20000000;
-						fprintf(tempMap,"%d\n",currentRoom->roomCode);
-						fprintf(tempDir,"x\n");
+						saveMap(tempMap,tempDir,currentRoom,'x');
 						pData.pMoney+=currentRoom->roomTreasure.treasVal;
 						Px--;
 						pData.pExp++;
@@ -1151,15 +1125,16 @@ int main()
 							newRoom->eastRoom=NULL;	
 							newRoom->westRoom=NULL;
 							newRoom->southRoom=currentRoom;
-							currentRoom->northRoom=newRoom;			
+							currentRoom->northRoom=newRoom;
 							newRoom=NULL;
 							currentRoom=currentRoom->northRoom;	
 							totalRooms++;		
 						}
 						Px=roomSize-1;
 						Py=roomSize/2;
-						fprintf(tempMap,"%d\n",currentRoom->roomCode);
-						fprintf(tempDir,"w\n");						
+						saveMap(tempMap,tempDir,currentRoom,'w');
+						printf("yes");
+						getch();				
 					}
 					else if (checkForWall(box,tempX-1,Py))
 					{
@@ -1173,13 +1148,13 @@ int main()
 						playerHP=pData.pHP;
 						if(currentRoom->roomEnem.enemHP<=0&&pData.pHP>0)
 						{
-							Py++;
-							pData.pHP+=pData.pCon;
+							if (currentRoom->roomEnem.boss!=1)
+								Py++;
+							playerHP+=pData.pCon;
 							if (playerHP>pData.pMaxHP)
 								playerHP=pData.pHP=pData.pMaxHP;
 							currentRoom->roomCode-=20000;
-							fprintf(tempMap,"%d\n",currentRoom->roomCode);
-							fprintf(tempDir,"x\n");
+							saveMap(tempMap,tempDir,currentRoom,'x');
 							pData.pExp++;
 							totalEnem++;
 						}
@@ -1187,8 +1162,7 @@ int main()
 					else if(checkForArmor(box,Px,tempY+1))
 					{
 						currentRoom->roomCode-=200000;
-						fprintf(tempMap,"%d\n",currentRoom->roomCode);
-						fprintf(tempDir,"x\n");
+						saveMap(tempMap,tempDir,currentRoom,'x');
 						equipArmor(&pData,currentRoom->roomArmor);
 						pData.pArmor=currentRoom->roomArmor;
 						Py++;
@@ -1196,8 +1170,7 @@ int main()
 					else if(checkForWeap(box,Px,tempY+1))
 					{
 						currentRoom->roomCode-=2000000;
-						fprintf(tempMap,"%d\n",currentRoom->roomCode);
-						fprintf(tempDir,"x\n");
+						saveMap(tempMap,tempDir,currentRoom,'x');
 						equipWeap(&pData,currentRoom->roomWeapon);
 						pData.pWeapon=currentRoom->roomWeapon;
 						Py++;
@@ -1205,8 +1178,7 @@ int main()
 					else if(checkForTreasure(box,Px,tempY+1))
 					{
 						currentRoom->roomCode-=20000000;
-						fprintf(tempMap,"%d\n",currentRoom->roomCode);
-						fprintf(tempDir,"x\n");
+						saveMap(tempMap,tempDir,currentRoom,'x');
 						pData.pMoney+=currentRoom->roomTreasure.treasVal;
 						pData.pExp++;
 						Py++;
@@ -1230,8 +1202,7 @@ int main()
 						}
 						Py=0;
 						Px=roomSize/2;
-						fprintf(tempMap,"%d\n",currentRoom->roomCode);
-						fprintf(tempDir,"d\n");	
+						saveMap(tempMap,tempDir,currentRoom,'d');
 					}
 					else if (checkForWall(box,Px,tempY+1))
 					{
@@ -1245,13 +1216,13 @@ int main()
 						playerHP=pData.pHP;
 						if(currentRoom->roomEnem.enemHP<=0&&pData.pHP>0)
 						{
-							Py--;
-							pData.pHP+=pData.pCon;
+							if (currentRoom->roomEnem.boss!=1)
+								Py--;
+							playerHP+=pData.pCon;
 							if (playerHP>pData.pMaxHP)
 								playerHP=pData.pHP=pData.pMaxHP;
 							currentRoom->roomCode-=20000;
-							fprintf(tempMap,"%d\n",currentRoom->roomCode);
-							fprintf(tempDir,"x\n");
+							saveMap(tempMap,tempDir,currentRoom,'x');
 							pData.pExp++;
 							totalEnem++;
 						}
@@ -1259,8 +1230,7 @@ int main()
 					else if(checkForArmor(box,Px,tempY-1))
 					{
 						currentRoom->roomCode-=200000;
-						fprintf(tempMap,"%d\n",currentRoom->roomCode);
-						fprintf(tempDir,"x\n");
+						saveMap(tempMap,tempDir,currentRoom,'x');
 						equipArmor(&pData,currentRoom->roomArmor);
 						pData.pArmor=currentRoom->roomArmor;
 						Py--;
@@ -1268,8 +1238,7 @@ int main()
 					else if(checkForWeap(box,Px,tempY-1))
 					{
 						currentRoom->roomCode-=2000000;
-						fprintf(tempMap,"%d\n",currentRoom->roomCode);
-						fprintf(tempDir,"x\n");
+						saveMap(tempMap,tempDir,currentRoom,'x');
 						equipWeap(&pData,currentRoom->roomWeapon);
 						pData.pWeapon=currentRoom->roomWeapon;
 						Py--;
@@ -1277,8 +1246,7 @@ int main()
 					else if(checkForTreasure(box,Px,tempY-1))
 					{
 						currentRoom->roomCode-=20000000;
-						fprintf(tempMap,"%d\n",currentRoom->roomCode);
-						fprintf(tempDir,"x\n");
+						saveMap(tempMap,tempDir,currentRoom,'x');
 						pData.pMoney+=currentRoom->roomTreasure.treasVal;
 						pData.pExp++;
 						Py--;
@@ -1302,8 +1270,7 @@ int main()
 						}
 						Py=roomSize-1;
 						Px=roomSize/2;
-						fprintf(tempMap,"%d\n",currentRoom->roomCode);
-						fprintf(tempDir,"a\n");	
+						saveMap(tempMap,tempDir,currentRoom,'a');
 					}
 					else if (checkForWall(box,Px,tempY-1))
 					{
@@ -1317,13 +1284,13 @@ int main()
 						playerHP=pData.pHP;
 						if(currentRoom->roomEnem.enemHP<=0&&pData.pHP>0)
 						{
-							Px++;
-							pData.pHP+=pData.pCon;
+							if (currentRoom->roomEnem.boss!=1)
+								Px++;
+							playerHP+=pData.pCon;
 							if (playerHP>pData.pMaxHP)
 								playerHP=pData.pHP=pData.pMaxHP;
 							currentRoom->roomCode-=20000;
-							fprintf(tempMap,"%d\n",currentRoom->roomCode);
-							fprintf(tempDir,"x\n");
+							saveMap(tempMap,tempDir,currentRoom,'x');
 							pData.pExp++;
 							totalEnem++;
 						}
@@ -1331,8 +1298,7 @@ int main()
 					else if(checkForArmor(box,tempX+1,Py))
 					{
 						currentRoom->roomCode-=200000;
-						fprintf(tempMap,"%d\n",currentRoom->roomCode);
-						fprintf(tempDir,"x\n");
+						saveMap(tempMap,tempDir,currentRoom,'x');
 						equipArmor(&pData,currentRoom->roomArmor);
 						pData.pArmor=currentRoom->roomArmor;
 						Px++;
@@ -1340,8 +1306,7 @@ int main()
 					else if(checkForWeap(box,tempX+1,Py))
 					{
 						currentRoom->roomCode-=2000000;
-						fprintf(tempMap,"%d\n",currentRoom->roomCode);
-						fprintf(tempDir,"x\n");
+						saveMap(tempMap,tempDir,currentRoom,'x');
 						equipWeap(&pData,currentRoom->roomWeapon);
 						pData.pWeapon=currentRoom->roomWeapon;
 						Px++;
@@ -1349,8 +1314,7 @@ int main()
 					else if(checkForTreasure(box,tempX+1,Py))
 					{
 						currentRoom->roomCode-=20000000;
-						fprintf(tempMap,"%d\n",currentRoom->roomCode);
-						fprintf(tempDir,"x\n");
+						saveMap(tempMap,tempDir,currentRoom,'x');
 						pData.pMoney+=currentRoom->roomTreasure.treasVal;
 						pData.pExp++;
 						Px++;
@@ -1374,8 +1338,7 @@ int main()
 						}
 						Px=0;
 						Py=roomSize/2;
-						fprintf(tempMap,"%d\n",currentRoom->roomCode);
-						fprintf(tempDir,"s\n");	
+						saveMap(tempMap,tempDir,currentRoom,'s');
 					}
 					else if (checkForWall(box,tempX+1,Py))
 					{
@@ -1398,6 +1361,11 @@ int main()
 	}
 	else if(totalRooms>=roomLimit)
 	{
+		for(i=0;i<roomSize;i++)
+		{
+			for(j=0;j<roomSize;j++)
+				if(i==0||j);
+		}
 		printBoard(box,totalRooms,currentRoom,Px,Py);
 		printf("hoy cheater you cant win the game yet hoy");
 	}
